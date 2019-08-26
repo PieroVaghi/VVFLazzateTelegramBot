@@ -1,8 +1,5 @@
 #COMMENT
  # Ogni volta che il bot viene lanciato perde i valori salvati di vigil info e reperibiMatrix.. 
- # da provare il funzionamento con bot da telefoni diversi contemporaneamente
- # trovare modo per tenere reperibiMatrix on line e consultabile da tutti..
- # mettere aposto rimuovi personale: deve cercare in base al ID;
  # Cambiare il comando reperibile in qualcosa tipo "Modifica Reperibilita'"
  # vigilInfo deve essere una matrice in cui ognuno salva il proprio ID assieme alle proprie informazioni 
  # 
@@ -22,7 +19,7 @@ from pprint import pprint
 bot = telepot.Bot(TOKEN)
 reperibiMatrix = ["Nessun reperibile al momento."]
 sedeMatrix = ["Nessun vigile in sede al momento."]
-vigilInfo = ""
+vigilInfo = []
 def Testa(Lista):
     return Lista[0]
 def Vuota(Lista):
@@ -70,7 +67,9 @@ def on_chat_message(msg):
         if Vuota(vigilInfo):
             bot.sendMessage(chat_id, "Nessun profilo salvato")
         else:
+            bot.sendMessage(chat_id, "VigilInfo:")
             bot.sendMessage(chat_id, vigilInfo[0:])
+        bot.sendMessage(chat_id, "reperibiMatrix:")
         bot.sendMessage(chat_id, reperibiMatrix[0:])
 #sede
     elif msg['text']=="/sede":
@@ -83,16 +82,17 @@ def on_chat_message(msg):
     elif msg['text'][0]=='_':
         temp = True
         i = 0
-        while i < len(reperibiMatrix):
+        while i < len(vigilInfo):
             if vigilInfo[i][0] == chat_id:
                 temp = False
                 bot.sendMessage(chat_id, "Sei gia' presente nel sistema come:")
                 bot.sendMessage(chat_id, vigilInfo[i][1])
             i = i+1  
         if temp:
-            vigilInfo.append([chat_id, msg['text'][1:]+" grado"])
+            infoV = msg['text'][1:]+" grado"
+            vigilInfo.append([chat_id, infoV])
             bot.sendMessage(chat_id, "Perfetto! Grazie mille!\nIl sistema ti ha memorizzato come:")    
-            bot.sendMessage(chat_id, vigilInfo)[len(vigilInfo)-1:]          
+            bot.sendMessage(chat_id, vigilInfo[(len(vigilInfo)-1)][1])     
 #default    
     else:
         bot.sendMessage(chat_id, "Non hai inserito un comando valido.. Non che ce ne siano molti.. Ma il tuo non vale!")
@@ -109,14 +109,34 @@ def on_callback_query(msg):
 
 #RISPOSTE ALLA TASTIERA INLINE:
 #aggiungi personale
-    if query_data =="aggiungi_press":     
+    if query_data =="aggiungi_press": 
+        flag = True    
     #    bot.answerCallbackQuery(query_id, text="La tua reperibilita' e' stata inserita! /personale per vedere i reperibili al momento")
         if reperibiMatrix[0] == "Nessun reperibile al momento." :
-            reperibiMatrix[0] = [from_id, vigilInfo]
+            i = 0
+            while i < len(vigilInfo):
+                if vigilInfo[i][0] == from_id:
+                    reperibiMatrix[0]=([from_id, vigilInfo[i][1]])
+                    bot.sendMessage(from_id, "abbiamo aggiunto la tua reperibilita'")
+                i = i+1 
         else: 
-            reperibiMatrix.append([from_id, vigilInfo])
-        bot.sendMessage(from_id, "abbiamo aggiunto la tua reperibilita'")
-        bot.sendMessage(from_id, vigilInfo[0:])
+            j = 0
+            while j < len(reperibiMatrix):
+                if reperibiMatrix[j][0] == from_id:
+                    flag = False
+                    bot.sendMessage(from_id, "Risulti essere gia' reperibile!")
+                j = j+1
+            i = 0
+            while i < len(vigilInfo):
+                if (vigilInfo[i][0] == from_id) & (flag):
+                    reperibiMatrix.append([from_id, vigilInfo[i][1]])
+                    bot.sendMessage(from_id, "abbiamo aggiunto la tua reperibilita'")
+                i = i+1     
+        i = 0
+        while i < len(vigilInfo):
+            if vigilInfo[i][0] == from_id:
+                bot.sendMessage(from_id, vigilInfo[i][1])
+            i = i+1 
       #  print(reperibiMatrix)
       #  bot.sendMessage(from_id, "Qui si andremo a creare un log per inserire la propria reperibilita'")
 #rimuovi personale
@@ -127,11 +147,12 @@ def on_callback_query(msg):
             i = 0
             while i < len(reperibiMatrix):
                 if reperibiMatrix[i][0] == from_id:
-                    reperibiMatrix.remove([from_id, vigilInfo])
+                    reperibiMatrix.remove(reperibiMatrix[i])
                 i = i+1  
 
         bot.sendMessage(from_id, "abbiamo rimosso la tua reperibilita'")
-
+        if Vuota(reperibiMatrix):
+            reperibiMatrix.append("Nessun reperibile al momento.")
     
 
     #bot.answerCallbackQuery(query_id, text="YEAH")
