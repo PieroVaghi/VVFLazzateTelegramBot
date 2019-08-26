@@ -2,6 +2,7 @@
  # Ogni volta che il bot viene lanciato perde i valori salvati di vigil info e reperibiMatrix.. 
  # Cambiare il comando reperibile in qualcosa tipo "Modifica Reperibilita'"
  # vigilInfo deve essere una matrice in cui ognuno salva il proprio ID assieme alle proprie informazioni 
+ # Finire di scrivere l'help in config
  # 
  # Pensare ad un eventuale "VIGILI IN SEDE" dove quando una persona e' in sede si segna e in caso qualcuno aggiunge o rimuove una reperibilita' gli arriva un messaggio
  # Di coseguenza al punto precedente il comando personale deve restituire sia i vigili in sede che quelli reperibili
@@ -13,6 +14,7 @@
 import telepot
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from config import TOKEN
+from config import HELP
 import sys, time
 from pprint import pprint 
 
@@ -38,8 +40,8 @@ def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 #InlineKeyboard:
     keyboardRep = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Aggiungi Reperibile", callback_data='aggiungi_press')],
-        [InlineKeyboardButton(text="Rimuovi Reperibile", callback_data='rimuovi_press')],
+        [InlineKeyboardButton(text="Aggiungi la tua reperibilita'", callback_data='aggiungi_press')],
+        [InlineKeyboardButton(text="Rimuovi la tua reperibilita'", callback_data='rimuovi_press')],
     ])
 
 
@@ -75,9 +77,6 @@ def on_chat_message(msg):
     elif msg['text']=="/sede":
         bot.sendMessage("289847356", "Vediamo se funziona il sendMessage con il codice ID")
         bot.sendMessage(chat_id, "Hai attivato il comando sono in sede.. Lo stiamo Implementando")
-#help    
-    elif msg['text']=="/help":
-        bot.sendMessage(chat_id, "Hai attivato il comando help.. BRAVO!")
 #VigilInfo
     elif msg['text'][0]=='_':
         temp = True
@@ -93,6 +92,9 @@ def on_chat_message(msg):
             vigilInfo.append([chat_id, infoV])
             bot.sendMessage(chat_id, "Perfetto! Grazie mille!\nIl sistema ti ha memorizzato come:")    
             bot.sendMessage(chat_id, vigilInfo[(len(vigilInfo)-1)][1])     
+#help    
+    elif msg['text']=="/help":
+        bot.sendMessage(chat_id, HELP)
 #default    
     else:
         bot.sendMessage(chat_id, "Non hai inserito un comando valido.. Non che ce ne siano molti.. Ma il tuo non vale!")
