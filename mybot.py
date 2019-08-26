@@ -1,10 +1,10 @@
 #COMMENT
  # Ogni volta che il bot viene lanciato perde i valori salvati di vigil info e reperibiMatrix.. 
  # Cambiare il comando reperibile in qualcosa tipo "Modifica Reperibilita'"
- # vigilInfo deve essere una matrice in cui ognuno salva il proprio ID assieme alle proprie informazioni 
  # Finire di scrivere l'help in config
+ #se sono in sede non dovrei essere reperibile e se sono reperibile non dovrei essere in sede
  # 
- # Pensare ad un eventuale "VIGILI IN SEDE" dove quando una persona e' in sede si segna e in caso qualcuno aggiunge o rimuove una reperibilita' gli arriva un messaggio
+ # Una persona e' in sede si segna e in caso qualcuno aggiunge o rimuove una reperibilita' gli arriva un messaggio
  # Di coseguenza al punto precedente il comando personale deve restituire sia i vigili in sede che quelli reperibili
  # 
  # Implementare comando segreto "/LaPieFraGio" con cui accedere alla "god mode": vedi reperibiMatrix e sedeMatrix, mandi messaggi singoli ecc..
@@ -43,6 +43,10 @@ def on_chat_message(msg):
         [InlineKeyboardButton(text="Aggiungi la tua reperibilita'", callback_data='aggiungi_press')],
         [InlineKeyboardButton(text="Rimuovi la tua reperibilita'", callback_data='rimuovi_press')],
     ])
+    keyboardSed = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Sono in sede", callback_data='sede_press')],
+        [InlineKeyboardButton(text="Vado a casa", callback_data='casa_press')],
+    ])
 
 
 #COMANDI:
@@ -54,6 +58,15 @@ def on_chat_message(msg):
         bot.sendMessage(chat_id, "Scrivi in un messaggio il tuo nome, cognome e grado di patente ministeriale preceduto da _ in questo modo:\n_Nome Cognome 1")
 #personale 
     elif msg['text']=="/personale": 
+        bot.sendMessage(chat_id, "Personale in sede:")
+        if sedeMatrix[0] == "Nessun vigile in sede al momento." :
+            bot.sendMessage(chat_id, "Nessun vigile in sede al momento.")
+        else:
+            i = 0
+            while i < len(sedeMatrix):
+                bot.sendMessage(chat_id, sedeMatrix[i][1])
+                i = i+1 
+        bot.sendMessage(chat_id, "Personale reperibile:")
         if reperibiMatrix[0] == "Nessun reperibile al momento." :
             bot.sendMessage(chat_id, "Nessun reperibile al momento.")
         else:
@@ -71,12 +84,13 @@ def on_chat_message(msg):
         else:
             bot.sendMessage(chat_id, "VigilInfo:")
             bot.sendMessage(chat_id, vigilInfo[0:])
+        bot.sendMessage(chat_id, "sedeMatrix:")
+        bot.sendMessage(chat_id, sedeMatrix[0:])
         bot.sendMessage(chat_id, "reperibiMatrix:")
-        bot.sendMessage(chat_id, reperibiMatrix[0:])
+        bot.sendMessage(chat_id, reperibiMatrix[0:])      
 #sede
     elif msg['text']=="/sede":
-        bot.sendMessage("289847356", "Vediamo se funziona il sendMessage con il codice ID")
-        bot.sendMessage(chat_id, "Hai attivato il comando sono in sede.. Lo stiamo Implementando")
+        bot.sendMessage(chat_id, "Sei appena arrivato in sede o stai andando via?", reply_markup=keyboardSed)
 #VigilInfo
     elif msg['text'][0]=='_':
         temp = True
@@ -113,7 +127,6 @@ def on_callback_query(msg):
 #aggiungi personale
     if query_data =="aggiungi_press": 
         flag = True    
-    #    bot.answerCallbackQuery(query_id, text="La tua reperibilita' e' stata inserita! /personale per vedere i reperibili al momento")
         if reperibiMatrix[0] == "Nessun reperibile al momento." :
             i = 0
             while i < len(vigilInfo):
@@ -155,7 +168,48 @@ def on_callback_query(msg):
         bot.sendMessage(from_id, "abbiamo rimosso la tua reperibilita'")
         if Vuota(reperibiMatrix):
             reperibiMatrix.append("Nessun reperibile al momento.")
-    
+#sono in sede
+    elif query_data =="sede_press": 
+        flag = True    
+        if sedeMatrix[0] == "Nessun vigile in sede al momento." :
+            i = 0
+            while i < len(vigilInfo):
+                if vigilInfo[i][0] == from_id:
+                    sedeMatrix[0]=([from_id, vigilInfo[i][1]])
+                    bot.sendMessage(from_id, "Sei stato inserito in sede!")
+                i = i+1 
+        else: 
+            j = 0
+            while j < len(sedeMatrix):
+                if sedeMatrix[j][0] == from_id:
+                    flag = False
+                    bot.sendMessage(from_id, "Risulti essere gia' in sede!")
+                j = j+1
+            i = 0
+            while i < len(vigilInfo):
+                if (vigilInfo[i][0] == from_id) & (flag):
+                    sedeMatrix.append([from_id, vigilInfo[i][1]])
+                    bot.sendMessage(from_id, "Sei stato inserito in sede!")
+                i = i+1     
+        i = 0
+        while i < len(vigilInfo):
+            if vigilInfo[i][0] == from_id:
+                bot.sendMessage(from_id, vigilInfo[i][1])
+            i = i+1      
+#vado a casa
+    elif query_data == "casa_press":
+        if sedeMatrix[0] == "Nessun vigile in sede al momento.":
+            bot.sendMessage(from_id, "Non risulta esserci nessun vigile in sede")
+        else:
+            i = 0
+            while i < len(sedeMatrix):
+                if sedeMatrix[i][0] == from_id:
+                    sedeMatrix.remove(sedeMatrix[i])
+                i = i+1  
+
+        bot.sendMessage(from_id, "Sei stato tolto dall'elenco dei vigili in sede")
+        if Vuota(sedeMatrix):
+            sedeMatrix.append("Nessun vigile in sede al momento.")
 
     #bot.answerCallbackQuery(query_id, text="YEAH")
 
