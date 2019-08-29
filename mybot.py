@@ -2,7 +2,7 @@
  # Ogni volta che il bot viene lanciato perde i valori salvati di vigil info e reperibiMatrix.. 
  # Cambiare il comando reperibile in qualcosa tipo "Modifica Reperibilita'"
  # Finire di scrivere l'help in config
- #se sono in sede non dovrei essere reperibile e se sono reperibile non dovrei essere in sede
+ # se sono in sede non dovrei essere reperibile e se sono reperibile non dovrei essere in sede
  # 
  # Una persona e' in sede si segna e in caso qualcuno aggiunge o rimuove una reperibilita' gli arriva un messaggio
  # Di coseguenza al punto precedente il comando personale deve restituire sia i vigili in sede che quelli reperibili
@@ -12,15 +12,18 @@
 
 
 import telepot
+import datetime
+import sys, time
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from config import TOKEN
 from config import HELP
-import sys, time
 from pprint import pprint 
 
 bot = telepot.Bot(TOKEN)
-reperibiMatrix = ["Nessun reperibile al momento."]
-sedeMatrix = ["Nessun vigile in sede al momento."]
+noRep = "Nessun reperibile al momento."
+reperibiMatrix = [noRep]
+noSede = "Nessun vigile in sede al momento."
+sedeMatrix = [noSede]
 vigilInfo = []
 def Testa(Lista):
     return Lista[0]
@@ -59,16 +62,16 @@ def on_chat_message(msg):
 #personale 
     elif msg['text']=="/personale": 
         bot.sendMessage(chat_id, "Personale in sede:")
-        if sedeMatrix[0] == "Nessun vigile in sede al momento." :
-            bot.sendMessage(chat_id, "Nessun vigile in sede al momento.")
+        if sedeMatrix[0] == noSede :
+            bot.sendMessage(chat_id, noSede)
         else:
             i = 0
             while i < len(sedeMatrix):
                 bot.sendMessage(chat_id, sedeMatrix[i][1])
                 i = i+1 
         bot.sendMessage(chat_id, "Personale reperibile:")
-        if reperibiMatrix[0] == "Nessun reperibile al momento." :
-            bot.sendMessage(chat_id, "Nessun reperibile al momento.")
+        if reperibiMatrix[0] == noRep :
+            bot.sendMessage(chat_id, noRep)
         else:
             i = 0
             while i < len(reperibiMatrix):
@@ -127,7 +130,7 @@ def on_callback_query(msg):
 #aggiungi personale
     if query_data =="aggiungi_press": 
         flag = True    
-        if reperibiMatrix[0] == "Nessun reperibile al momento." :
+        if reperibiMatrix[0] == noRep :
             i = 0
             while i < len(vigilInfo):
                 if vigilInfo[i][0] == from_id:
@@ -156,7 +159,7 @@ def on_callback_query(msg):
       #  bot.sendMessage(from_id, "Qui si andremo a creare un log per inserire la propria reperibilita'")
 #rimuovi personale
     elif query_data == "rimuovi_press":
-        if reperibiMatrix[0] == "Nessun reperibile al momento.":
+        if reperibiMatrix[0] == noRep:
             bot.sendMessage(from_id, "Non e' presente alcuna reperibilita' da rimuovere!")
         else:
             i = 0
@@ -167,11 +170,11 @@ def on_callback_query(msg):
 
         bot.sendMessage(from_id, "abbiamo rimosso la tua reperibilita'")
         if Vuota(reperibiMatrix):
-            reperibiMatrix.append("Nessun reperibile al momento.")
+            reperibiMatrix.append(noRep)
 #sono in sede
     elif query_data =="sede_press": 
         flag = True    
-        if sedeMatrix[0] == "Nessun vigile in sede al momento." :
+        if sedeMatrix[0] == noSede :
             i = 0
             while i < len(vigilInfo):
                 if vigilInfo[i][0] == from_id:
@@ -198,7 +201,7 @@ def on_callback_query(msg):
             i = i+1      
 #vado a casa
     elif query_data == "casa_press":
-        if sedeMatrix[0] == "Nessun vigile in sede al momento.":
+        if sedeMatrix[0] == noSede:
             bot.sendMessage(from_id, "Non risulta esserci nessun vigile in sede")
         else:
             i = 0
@@ -209,7 +212,7 @@ def on_callback_query(msg):
 
         bot.sendMessage(from_id, "Sei stato tolto dall'elenco dei vigili in sede")
         if Vuota(sedeMatrix):
-            sedeMatrix.append("Nessun vigile in sede al momento.")
+            sedeMatrix.append(noSede)
 
     #bot.answerCallbackQuery(query_id, text="YEAH")
 
